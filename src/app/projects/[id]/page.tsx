@@ -23,6 +23,7 @@ export default function ProjectDetailPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("All");
+  const [priorityFilter, setPriorityFilter] = useState("All");
   const [newTask, setNewTask] = useState({
     title: "",
     status: "Todo" as Task["status"],
@@ -70,7 +71,11 @@ export default function ProjectDetailPage() {
     return "bg-green-100 text-green-600";
   };
 
-  const filteredTasks = filter === "All" ? tasks : tasks.filter(t => t.status === filter);
+  const filteredTasks = tasks.filter(t => {
+    const statusMatch = filter === "All" || t.status === filter;
+    const priorityMatch = priorityFilter === "All" || t.priority === priorityFilter;
+    return statusMatch && priorityMatch;
+  });
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center">
@@ -139,8 +144,8 @@ export default function ProjectDetailPage() {
           </div>
         </div>
 
-        {/* FILTER */}
-        <div className="flex gap-2 mb-4">
+        {/* STATUS FILTER */}
+        <div className="flex gap-2 mb-3">
           {["All", "Todo", "In Progress", "Done"].map((f) => (
             <button
               key={f}
@@ -150,6 +155,21 @@ export default function ProjectDetailPage() {
               }`}
             >
               {f}
+            </button>
+          ))}
+        </div>
+
+        {/* PRIORITY FILTER */}
+        <div className="flex gap-2 mb-6">
+          {["All", "Low", "Medium", "High"].map((p) => (
+            <button
+              key={p}
+              onClick={() => setPriorityFilter(p)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                priorityFilter === p ? "bg-purple-600 text-white" : "bg-white text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              {p}
             </button>
           ))}
         </div>

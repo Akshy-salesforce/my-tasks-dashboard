@@ -5,6 +5,7 @@ import { db } from "@/lib/firebase";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { motion } from "framer-motion";
 
 export default function DashboardPage() {
   const { user, logout } = useAuth();
@@ -22,10 +23,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) {
-      router.push("/");
-      return;
-    }
+    if (!user) { router.push("/"); return; }
     fetchStats();
   }, [user]);
 
@@ -35,12 +33,8 @@ export default function DashboardPage() {
         query(collection(db, "projects"), where("userId", "==", user!.uid))
       );
 
-      let total = 0;
-      let completedThisWeek = 0;
-      let overdue = 0;
-      let todo = 0;
-      let inProgress = 0;
-      let done = 0;
+      let total = 0, completedThisWeek = 0, overdue = 0;
+      let todo = 0, inProgress = 0, done = 0;
 
       const now = new Date();
       const weekAgo = new Date();
@@ -53,7 +47,6 @@ export default function DashboardPage() {
         tasksSnap.docs.forEach((task) => {
           const data = task.data();
           total++;
-
           if (data.status === "Todo") todo++;
           if (data.status === "In Progress") inProgress++;
           if (data.status === "Done") {
@@ -61,7 +54,6 @@ export default function DashboardPage() {
             const completedAt = data.completedAt?.toDate();
             if (completedAt && completedAt >= weekAgo) completedThisWeek++;
           }
-
           if (data.status !== "Done" && data.dueDate) {
             const due = new Date(data.dueDate);
             if (due < now) overdue++;
@@ -121,22 +113,32 @@ export default function DashboardPage() {
 
         {/* STATS CARDS */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-2xl shadow p-6">
-            <p className="text-gray-500 text-sm mb-1">Total Tasks</p>
-            <p className="text-4xl font-bold text-gray-800">{stats.total}</p>
-          </div>
-          <div className="bg-white rounded-2xl shadow p-6">
-            <p className="text-gray-500 text-sm mb-1">Completed This Week</p>
-            <p className="text-4xl font-bold text-green-600">{stats.completedThisWeek}</p>
-          </div>
-          <div className="bg-white rounded-2xl shadow p-6">
-            <p className="text-gray-500 text-sm mb-1">Overdue</p>
-            <p className="text-4xl font-bold text-red-500">{stats.overdue}</p>
-          </div>
+          {[
+            { label: "Total Tasks", value: stats.total, color: "text-gray-800" },
+            { label: "Completed This Week", value: stats.completedThisWeek, color: "text-green-600" },
+            { label: "Overdue", value: stats.overdue, color: "text-red-500" },
+          ].map((card, i) => (
+            <motion.div
+              key={card.label}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.1 }}
+              whileHover={{ scale: 1.03 }}
+              className="bg-white rounded-2xl shadow p-6"
+            >
+              <p className="text-gray-500 text-sm mb-1">{card.label}</p>
+              <p className={`text-4xl font-bold ${card.color}`}>{card.value}</p>
+            </motion.div>
+          ))}
         </div>
 
         {/* CHART */}
-        <div className="bg-white rounded-2xl shadow p-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="bg-white rounded-2xl shadow p-6"
+        >
           <h3 className="text-lg font-semibold text-gray-700 mb-4">Tasks by Status</h3>
           {stats.total === 0 ? (
             <p className="text-gray-400 text-center py-8">No tasks yet. Create a project to get started!</p>
@@ -150,7 +152,7 @@ export default function DashboardPage() {
               </BarChart>
             </ResponsiveContainer>
           )}
-        </div>
+        </motion.div>
       </div>
     </div>
   );

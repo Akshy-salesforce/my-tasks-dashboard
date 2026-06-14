@@ -121,7 +121,9 @@ export default function ProjectsPage() {
                   className="cursor-pointer flex-1"
                 >
                   <h3 className="text-lg font-semibold text-gray-800">{project.name}</h3>
-                  <p className="text-sm text-gray-400">Click to view tasks</p>
+                  <p className="text-sm text-gray-400">
+                    Created: {project.createdAt?.toDate?.()?.toLocaleDateString() || "N/A"}
+                  </p>
                 </div>
                 <button
                   onClick={() => deleteProject(project.id)}
