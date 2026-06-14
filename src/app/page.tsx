@@ -1,90 +1,93 @@
 "use client";
-
 import { useState } from "react";
+import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
-import { useAuth } from "../context/AuthContext";
 
-export default function LoginPage() {
-  const { login } = useAuth();
+export default function AuthPage() {
+  const { login, signup } = useAuth();
   const router = useRouter();
-
+  const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    const success = login(email, password);
-
-    if (!success) {
-      setError("Invalid email or password");
-    } else {
-      setError("");
+    setError("");
+    setLoading(true);
+    try {
+      if (isLogin) {
+        await login(email, password);
+      } else {
+        await signup(email, password);
+      }
       router.push("/dashboard");
+    } catch (err: any) {
+      setError(err.message || "Something went wrong");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
-      <form
-        onSubmit={handleSubmit}
-        style={{
-          width: "350px",
-          padding: "20px",
-          border: "1px solid #ccc",
-          borderRadius: "10px",
-        }}
-      >
-        <h2>Login</h2>
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md">
+        <h1 className="text-3xl font-bold text-center text-gray-800 mb-2">
+          📋 My Tasks
+        </h1>
+        <p className="text-center text-gray-500 mb-6">
+          {isLogin ? "Welcome back!" : "Create your account"}
+        </p>
 
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          style={{
-            width: "100%",
-            padding: "10px",
-            marginBottom: "10px",
-          }}
-        />
+        <div className="flex mb-6 bg-gray-100 rounded-lg p-1">
+          <button
+            onClick={() => setIsLogin(true)}
+            className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
+              isLogin ? "bg-white shadow text-blue-600" : "text-gray-500"
+            }`}
+          >
+            Login
+          </button>
+          <button
+            onClick={() => setIsLogin(false)}
+            className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
+              !isLogin ? "bg-white shadow text-blue-600" : "text-gray-500"
+            }`}
+          >
+            Sign Up
+          </button>
+        </div>
 
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          style={{
-            width: "100%",
-            padding: "10px",
-            marginBottom: "10px",
-          }}
-        />
-
-        {error && (
-          <p style={{ color: "red" }}>
-            {error}
-          </p>
-        )}
-
-        <button
-          type="submit"
-          style={{
-            width: "100%",
-            padding: "10px",
-          }}
-        >
-          Login
-        </button>
-      </form>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          />
+          {error && (
+            <p className="text-red-500 text-sm">{error}</p>
+          )}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-all disabled:opacity-50"
+          >
+            {loading ? "Please wait..." : isLogin ? "Login" : "Sign Up"}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
